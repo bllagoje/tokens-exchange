@@ -11,6 +11,7 @@ contract Token {
 
     mapping (address => uint) public balanceOf;
 
+    event Transfer(address indexed from, address indexed to, uint value);
     
     constructor(string memory _name, string memory _symbol, uint _totalSupply) {
         name = _name;
@@ -19,7 +20,15 @@ contract Token {
         balanceOf[msg.sender] = totalSupply;
     }
 
-    
+    function transfer(address _to, uint _value) public returns (bool success) {
+        require(balanceOf[msg.sender] >= _value);
+        require(_to != address(0));
+        balanceOf[msg.sender] -= _value;
+        balanceOf[_to] += _value;
+        emit Transfer(msg.sender, _to, _value);
+        return true;
+    }
+
 
 
 }
