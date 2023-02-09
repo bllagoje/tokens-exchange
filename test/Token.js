@@ -6,10 +6,7 @@ const tokens = (n) => {
 }
 
 describe("Token Contract", () => {
-    let token
-    let accounts
-    let deployer
-    let receiver
+    let token, accounts, deployer, receiver, exchange
 
     beforeEach(async () => {
         // Fetch Token from Blockchain:
@@ -18,6 +15,7 @@ describe("Token Contract", () => {
         accounts = await ethers.getSigners()
         deployer = accounts[0]
         receiver = accounts[1]
+        exchange = accounts[2]
     })
 
     describe("Deployment", () => {
@@ -102,6 +100,40 @@ describe("Token Contract", () => {
 
     })
 
+    describe("Approving Tokens", () => {
+        let amount
+        let transaction
+        let result
+
+        beforeEach(async () => {
+            amount = tokens(100)
+            transaction = await token.connect(deployer).approve(exchange.address, amount)
+            result = await transaction.wait()
+        })
+
+        describe("Success", () => {
+            it("Allocates an allowance for delegated token spending", async () => {
+                let allowance = await token.allowance(deployer.address, exchange.address)
+                expect(allowance).to.equal(amount)
+            })
+
+            it("Emits an Approval event", async () => {
+                let event = result.events[0]
+                expect(event.event).to.equal("Approval")
+
+                let args = event.args
+                expect(args.owner).to.equal(deployer.address)
+                expect(args.spender).to.equal(exchange.address)
+                expect(args.value).to.equal(amount)
+            })
+        })
+
+        describe("Failure", () => {
+            it("Rejects invalid spenders", async () => {
+                await expect(token.connect(deployer).approve("0x0000000000000000000000000000000000000000", amount)).to.be.reverted
+            })
+        })
+    })
 
 
     
