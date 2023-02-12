@@ -10,11 +10,13 @@ contract Exchange {
 
     mapping (address => mapping(address => uint)) public tokens;
     mapping (uint => _Order) public orders;
+    mapping (uint => bool) public orderCancelled;
     uint public orderCount;
 
     event Deposit(address token, address user, uint amount, uint balance);
     event Withdraw(address token, address user, uint amount, uint balance);
     event Order(uint id, address user, address tokenGet, uint amountGet, address tokenGive, uint amountGive, uint timestamp);
+    event Cancel(uint id, address user, address tokenGet, uint amountGet, address tokenGive, uint amountGive, uint timestamp);
 
     struct _Order {
         uint id;
@@ -61,6 +63,14 @@ contract Exchange {
         emit Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, block.timestamp);
     } 
     
+    function cancelOrder(uint _id) public {
+        _Order storage _order = orders[_id];
+        require(address(_order.user) == msg.sender);
+        require(_order.id == _id);
+        orderCancelled[_id] = true;
+        emit Cancel(_order.id, msg.sender, _order.tokenGet, _order.amountGet, _order.tokenGive, _order.amountGive, block.timestamp);
+    }
+
     
 
 }
