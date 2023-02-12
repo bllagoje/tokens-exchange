@@ -9,14 +9,30 @@ contract Exchange {
     uint public feePercent;
 
     mapping (address => mapping(address => uint)) public tokens;
+    mapping (uint => _Order) public orders;
+    uint public orderCount;
 
     event Deposit(address token, address user, uint amount, uint balance);
     event Withdraw(address token, address user, uint amount, uint balance);
+    event Order(uint id, address user, address tokenGet, uint amountGet, address tokenGive, uint amountGive, uint timestamp);
+
+    struct _Order {
+        uint id;
+        address user;
+        address tokenGet;
+        uint amountGet;
+        address tokenGive;
+        uint amountGive;
+        uint timestamp;
+    }
 
     constructor(address _feeAccount, uint _feePercent) {
         feeAccount = _feeAccount;
         feePercent = _feePercent;
     }
+
+    // ------------------------
+    // DEPOSIT & WITHDRAW TOKEN
 
     function depositToken(address _token, uint _amount) public {
         require(Token(_token).transferFrom(msg.sender, address(this), _amount));
@@ -35,6 +51,16 @@ contract Exchange {
         return tokens[_token][_user];
     }
 
+    // ------------------------
+    // MAKE & CANCEL ORDERS
+
+    function makeOrder(address _tokenGet, uint _amountGet, address _tokenGive, uint _amountGive) public {
+        require(balanceOf(_tokenGive, msg.sender) >= _amountGive);
+        orderCount += 1;
+        orders[orderCount] = _Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, block.timestamp);
+        emit Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, block.timestamp);
+    } 
+    
     
 
 }
