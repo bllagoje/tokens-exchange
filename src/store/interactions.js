@@ -1,7 +1,7 @@
 import { ethers } from "ethers"
 import TOKEN_ABI from "../abis/Token.json"
 import EXCHANGE_ABI from "../abis/Exchange.json"
-import { exchange } from "./reducers"
+import { exchange, provider } from "./reducers"
 // import { provider } from "./reducers"
 
 // Load provider
@@ -111,6 +111,11 @@ export const subscribeToEvents = (exchange, dispatch) => {
         const order = event.args
         dispatch({ type: "NEW_ORDER_SUCCESS", order, event })
     })
+
+    exchange.on("Cancel", (id, user, tokenGet, amountGet, tokenGive, amountGive, timestamp, event) => {
+        const order = event.args
+        dispatch({ type: "ORDER_CANCEL_SUCCESS", order, event })
+    })
 }
 
 // -----------------------------------------------------------------
@@ -174,4 +179,20 @@ export const makeSellOrder = async (provider, exchange, tokens, order, dispatch)
     } catch (err) {
         dispatch({ type: "NEW_ORDER_FAIL" })
     }
+}
+
+// -----------------------------------------------------------------
+// CANCEL ORDER
+export const cancelOrder = async (provider, exchange, order, dispatch) => {
+
+    dispatch({ type: "ORDER_CANCEL_REQUEST" })
+
+    try {
+        const signer = await provider.getSigner()
+        const transaction = await exchange.connect(signer).cancelOrder(order.id)
+        await transaction.wait()
+    } catch (err) {
+        dispatch({ type: "ORDER_CANCEL_FAIL" })
+    }
+
 }

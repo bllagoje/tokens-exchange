@@ -1,14 +1,19 @@
 import { useRef, useState } from "react"
-import { useSelector } from "react-redux"
+import { useSelector, useDispatch } from "react-redux"
 import { myFilledOrdersSelector, myOpenOrdersSelector } from "../store/selectors"
 import Banner from "./Banner"
 import sort from "../assets/sort.svg"
+import { cancelOrder } from "../store/interactions"
 
 
 const Transactions = () => {
-  const symbols = useSelector(state => state.tokens.symbols)  
+  const provider = useSelector(state => state.provider.connection)
+  const exchange = useSelector(state => state.exchange.contract)
+  const symbols = useSelector(state => state.tokens.symbols)
   const myOpenOrders = useSelector(myOpenOrdersSelector)
   const myFilledOrders = useSelector(myFilledOrdersSelector)
+
+  const dispatch = useDispatch()
 
   const orderRef = useRef(null)
   const tradeRef = useRef(null)
@@ -24,6 +29,10 @@ const Transactions = () => {
       tradeRef.current.className = "tab"
       setShowMyOrders(true)
     }
+  }
+
+  const cancelHandler = (order) => {
+    cancelOrder(provider, exchange, order, dispatch)
   }
 
     // -----------------------------------------------------------------
@@ -57,7 +66,7 @@ const Transactions = () => {
                       <tr key={index}>
                         <td style={{ color: `${order.orderTypeClass}` }}>{order.token0Amount}</td>
                         <td>{order.tokenPrice}</td>
-                        <td></td>
+                        <td><button className="button--sm" onClick={() => cancelHandler(order)}>Cancel</button></td>
                       </tr>
                     )
                   })}
